@@ -7,9 +7,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Drivenations(COMP_CODE)", group="Linear OpMode")
-public class Drivenations_FINAL_COMP_CODE extends LinearOpMode {
-//HAS SLOW MODE FOR ENDGAME (Doesn't work)
+@TeleOp(name="turretcode", group="Linear OpMode")
+public class turretcode extends LinearOpMode {
+
 
     //VARIABLE DECLARATIONS
 
@@ -31,18 +31,19 @@ public class Drivenations_FINAL_COMP_CODE extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             double turretMotorPower = 0;
-            // Send calculated power to wheels
+            // Send power to motor
             turretMotor.setPower(turretMotorPower);
 
-            // Show the elapsed game time and wheel power.
+            // Show opmode is active
             telemetry.addData("Status", "Initialized");
             telemetry.update();
 
+            //Check dpad for inputs
             if(gamepadpad1.dpad-left){
               turretmotor.setPower(1);
            } else if(gamepad1.dpad-right){
               turretmotor.setPower(-1);
-          } else{
+           } else{
               turretmotor.setPower(0);
         }
       }
