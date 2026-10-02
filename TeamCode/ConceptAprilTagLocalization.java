@@ -1,4 +1,4 @@
-/* DONT USE ANYMORE COMPILED
+/*
 
 Copyright (c) 2024 Dryw Wade. All rights reserved.
  *
