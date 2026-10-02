@@ -1,4 +1,6 @@
-/* Copyright (c) 2024 Dryw Wade. All rights reserved.
+/* DONT USE ANYMORE COMPILED
+
+Copyright (c) 2024 Dryw Wade. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted (subject to the limitations in the disclaimer below) provided that
