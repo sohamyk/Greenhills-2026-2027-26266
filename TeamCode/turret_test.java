@@ -31,10 +31,183 @@ class turret_test extends LinearOpMode {
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
+    private DcMotor turretMotor;
 
     // Define your AprilTag clusters here
-    // For example, if tags 1 and 2 form a cluster:
     private static final int[] CLUSTER_1_TAGS = {1, 2};
+    private static final int[] CLUSTER_2_TAGS = {3, 4};
+
+    @Override
+    public void runOpMode() {
+        initAprilTag();
+
+        turretMotor = hardwareMap.get(DcMotor.class, "turret_motor");
+        turretMotor.setDirection(DcMotor.Direction.FORWARD);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            double power = calculateAimbotPower();
+            turretMotor.setPower(power);
+
+            telemetryAprilTag();
+            telemetry.update();
+            sleep(20);
+        }
+
+        if (visionPortal != null) {
+            visionPortal.close();
+        }
+    }
+
+    private double calculateAimbotPower() {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+
+        if (detections.isEmpty()) {
+            telemetry.addData("Aimbot", "No tags");
+            return 0;
+        }
+
+        // Try to find a cluster first
+        AprilTagCluster bestCluster = findBestCluster(detections);
+        if (bestCluster != null) {
+            double offset = bestCluster.centerX;
+            telemetry.addData("Target Type", "Cluster " + bestCluster.id);
+            telemetry.addData("Offset", String.format("%.1f", offset));
+
+            if (Math.abs(offset) < DEADZONE) {
+                telemetry.addData("Lock", "true");
+                return 0;
+            }
+
+            double power = offset * PROPORTIONAL_GAIN;
+            power = Math.max(-MAX_MOTOR_POWER, Math.min(MAX_MOTOR_POWER, power));
+            telemetry.addData("Motor Power", String.format("%.2f", power));
+            return power;
+        }
+
+        // Fall back to individual tags if no cluster found
+        AprilTagDetection bestTag = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        for (AprilTagDetection detection : detections) {
+            if (detection.metadata != null && !detection.metadata.name.contains("Obelisk")) {
+                double distance = detection.robotPose.getPosition().z;
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestTag = detection;
+                }
+            }
+        }
+
+        if (bestTag == null) {
+            telemetry.addData("Aimbot", "No valid target");
+            return 0;
+        }
+
+        double offset = bestTag.robotPose.getPosition().x;
+
+        telemetry.addData("Offset", String.format("%.1f", offset));
+
+        if (Math.abs(offset) < DEADZONE) {
+            telemetry.addData("Lock", "true");
+            return 0;
+        }
+
+        double power = offset * PROPORTIONAL_GAIN;
+        power = Math.max(-MAX_MOTOR_POWER, Math.min(MAX_MOTOR_POWER, power));
+
+        telemetry.addData("Motor Power", String.format("%.2f", power));
+        return power;
+    }
+
+    private AprilTagCluster findBestCluster(List<AprilTagDetection> detections) {
+        AprilTagCluster bestCluster = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        int[][] clusters = {CLUSTER_1_TAGS, CLUSTER_2_TAGS};
+
+        for (int clusterIndex = 0; clusterIndex < clusters.length; clusterIndex++) {
+            int[] clusterTags = clusters[clusterIndex];
+            int matchCount = 0;
+            double sumX = 0;
+            double sumZ = 0;
+
+            for (AprilTagDetection detection : detections) {
+                for (int tagId : clusterTags) {
+                    if (detection.id == tagId) {
+                        matchCount++;
+                        sumX += detection.robotPose.getPosition().x;
+                        sumZ += detection.robotPose.getPosition().z;
+                        break;
+                    }
+                }
+            }
+
+            if (matchCount >= 2) {
+                double avgDistance = sumZ / matchCount;
+                if (avgDistance < bestDistance) {
+                    bestDistance = avgDistance;
+                    double centerX = sumX / matchCount;
+                    bestCluster = new AprilTagCluster(clusterIndex, centerX, avgDistance);
+                }
+            }
+        }
+
+        return bestCluster;
+    }
+
+    private void initAprilTag() {
+        aprilTag = new AprilTagProcessor.Builder()
+                .setCameraPose(cameraPosition, cameraOrientation)
+                .build();
+
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        } else {
+            builder.setCamera(BuiltinCameraDirection.BACK);
+        }
+
+        builder.addProcessor(aprilTag);
+        visionPortal = builder.build();
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void telemetryAprilTag() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags", currentDetections.size());
+
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("ID %d %s", detection.id, detection.metadata.name));
+                if (!detection.metadata.name.contains("Obelisk")) {
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f",
+                            detection.robotPose.getPosition().x,
+                            detection.robotPose.getPosition().y,
+                            detection.robotPose.getPosition().z));
+                }
+            }
+        }
+    }
+
+    private static class AprilTagCluster {
+        int id;
+        double centerX;
+        double distance;
+
+        AprilTagCluster(int id, double centerX, double distance) {
+            this.id = id;
+            this.centerX = centerX;
+            this.distance = distance;
+        }
+    }
+}    private static final int[] CLUSTER_1_TAGS = {1, 2};
     private static final int[] CLUSTER_2_TAGS = {3, 4};
 
     @Override
@@ -69,7 +242,7 @@ class turret_test extends LinearOpMode {
             return 0;
         }
 
-        // Try to find a cluster first
+        
         AprilTagCluster bestCluster = findBestCluster(detections);
         if (bestCluster != null) {
             double offset = bestCluster.centerX;
@@ -147,7 +320,7 @@ class turret_test extends LinearOpMode {
                 }
             }
 
-            // If we found at least 2 tags from the cluster, consider it valid
+            
             if (matchCount >= 2) {
                 double avgDistance = sumZ / matchCount;
                 if (avgDistance < bestDistance) {
@@ -196,7 +369,7 @@ class turret_test extends LinearOpMode {
         }
     }
 
-    // Simple class to represent an AprilTag cluster
+    
     private static class AprilTagCluster {
         int id;
         double centerX;
