@@ -1,0 +1,161 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@TeleOp(name = "Intake Launcher Drive Test", group = "Test")
+public class IntakeLauncherTest extends LinearOpMode {
+
+    private DcMotor lf;
+    private DcMotor rf;
+    private DcMotor lr;
+    private DcMotor rr;
+    private DcMotor intake;
+    private DcMotor launcher;
+
+    private enum ScoringElement {
+        POLLEN,
+        NECTAR
+    }
+
+    private ScoringElement selectedElement = ScoringElement.POLLEN;
+
+    private static final double DRIVE_POWER = 0.4;
+    private static final double INTAKE_POWER = 1.0;
+    private static final double POLLEN_LAUNCH_POWER = 0.8;
+    private static final double NECTAR_LAUNCH_POWER = 0.8;
+    private static final double DEADBAND = 0.05;
+
+    @Override
+    public void runOpMode() {
+        lf = hardwareMap.get(DcMotor.class, "lf");
+        rf = hardwareMap.get(DcMotor.class, "rf");
+        lr = hardwareMap.get(DcMotor.class, "lr");
+        rr = hardwareMap.get(DcMotor.class, "rr");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        launcher = hardwareMap.get(DcMotor.class, "launcher");
+
+        DcMotor[] motors = {
+                lf, rf, lr, rr, intake, launcher
+        };
+
+        for (DcMotor motor : motors) {
+            motor.setPower(0);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        lr.setDirection(DcMotorSimple.Direction.REVERSE);
+        rf.setDirection(DcMotorSimple.Direction.FORWARD);
+        rr.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        launcher.setDirection(DcMotorSimple.Direction.FORWARD);
+        launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        telemetry.addLine("Ready");
+        telemetry.addLine("G1 left stick: drive and strafe");
+        telemetry.addLine("G1 right stick X: turn");
+        telemetry.addLine("G2 left trigger: intake");
+        telemetry.addLine("G2 right trigger: launch");
+        telemetry.addLine("G2 Y: pollen | X: nectar");
+        telemetry.addLine("Hold B on either controller: stop all");
+        telemetry.update();
+
+        waitForStart();
+
+        try {
+            while (opModeIsActive()) {
+                if (gamepad2.y) {
+                    selectedElement = ScoringElement.POLLEN;
+                } else if (gamepad2.x) {
+                    selectedElement = ScoringElement.NECTAR;
+                }
+
+                double forward = applyDeadband(-gamepad1.left_stick_y);
+                double strafe = applyDeadband(gamepad1.left_stick_x);
+                double turn = applyDeadband(gamepad1.right_stick_x);
+
+                double denominator = Math.max(
+                        Math.abs(forward)
+                                + Math.abs(strafe)
+                                + Math.abs(turn),
+                        1.0
+                );
+
+                double lfPower =
+                        (forward + strafe + turn)
+                                / denominator * DRIVE_POWER;
+
+                double lrPower =
+                        (forward - strafe + turn)
+                                / denominator * DRIVE_POWER;
+
+                double rfPower =
+                        (forward - strafe - turn)
+                                / denominator * DRIVE_POWER;
+
+                double rrPower =
+                        (forward + strafe - turn)
+                                / denominator * DRIVE_POWER;
+
+                double intakePower =
+                        applyDeadband(gamepad2.left_trigger)
+                                * INTAKE_POWER;
+
+                double launchPreset =
+                        selectedElement == ScoringElement.POLLEN
+                                ? POLLEN_LAUNCH_POWER
+                                : NECTAR_LAUNCH_POWER;
+
+                double launcherPower =
+                        applyDeadband(gamepad2.right_trigger)
+                                * launchPreset;
+
+                boolean stopped = gamepad1.b || gamepad2.b;
+
+                if (stopped) {
+                    stopAll();
+                } else {
+                    lf.setPower(lfPower);
+                    lr.setPower(lrPower);
+                    rf.setPower(rfPower);
+                    rr.setPower(rrPower);
+                    intake.setPower(intakePower);
+                    launcher.setPower(launcherPower);
+                }
+
+                telemetry.addData("Selected element", selectedElement);
+                telemetry.addData("Launch preset", launchPreset);
+                telemetry.addData("Left front", lf.getPower());
+                telemetry.addData("Right front", rf.getPower());
+                telemetry.addData("Left rear", lr.getPower());
+                telemetry.addData("Right rear", rr.getPower());
+                telemetry.addData("Intake", intake.getPower());
+                telemetry.addData("Launcher", launcher.getPower());
+                telemetry.addData("Stopped", stopped);
+                telemetry.update();
+
+                idle();
+            }
+        } finally {
+            stopAll();
+        }
+    }
+
+    private double applyDeadband(double input) {
+        return Math.abs(input) > DEADBAND ? input : 0.0;
+    }
+
+    private void stopAll() {
+        lf.setPower(0);
+        rf.setPower(0);
+        lr.setPower(0);
+        rr.setPower(0);
+        intake.setPower(0);
+        launcher.setPower(0);
+    }
+}
