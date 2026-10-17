@@ -1,0 +1,95 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.ManualDrive;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+import org.firstinspires.ftc.teamcode.pedro.Constants;
+
+@TeleOp(name = "Teleop Test")
+public class teleop extends OpMode {
+  boolean bigLaunch = gamepad2.a;
+  boolean smallLaunch = gamepad2.b;
+  private Follower follower;
+
+  double intakeSpeed = 0.9;
+  double transferMechSpeed = 0.9;
+  double turretMotorPower;
+  double launcherSpeed =0.85;
+
+
+  private DcMotor turretmotor = null;
+  private DcMotor intakemotor = null;
+  private DcMotor transfermotor = null;
+  private DcMotor launchermotor = null;
+
+
+  @Override
+  public void init() {
+    follower = Constants.create(hardwareMap);
+  }
+
+  @Override
+  public void loop() {
+    boolean rightBumper = gamepad1.right_bumper;
+    boolean abutton = gamepad1.a;
+    boolean bbutton = gamepad1.b;
+    boolean leftBumper = gamepad1.left_bumper;
+
+    turretmotor = hardwareMap.get(DcMotor.class, "turret_motor");
+    intakemotor = hardwareMap.get(DcMotor.class, "intake motor");
+    transfermotor = hardwareMap.get(DcMotor.class, "transfer motor");
+    launchermotor = hardwareMap.get(DcMotor.class, "down");
+
+    ManualDrive.driveOrHold(
+      follower,
+      -gamepad1.left_stick_y,
+      gamepad1.left_stick_x,
+      gamepad1.right_stick_x
+    );
+
+    follower.update();
+
+    turretmotor.setPower(turretMotorPower);
+
+    // Show opmode is active
+    telemetry.addData("Status", "Initialized");
+    telemetry.addData("Motor Power:",turretMotorPower);
+    telemetry.update();
+    if (leftBumper){
+      launchermotor.setPower(launcherSpeed);
+    }
+    if (abutton) {
+      intakemotor.setPower(intakeSpeed);
+
+    }
+    if(bbutton){
+      intakemotor.setPower((-intakeSpeed));
+    }
+    if(rightBumper){
+      transfermotor.setPower(transferMechSpeed);
+    }
+    //Check dpad for inputs
+    if(gamepad1.dpadUpWasReleased()){
+      telemetry.addLine("Up");
+      turretMotorPower = turretMotorPower+0.1;
+      turretmotor.setPower(turretMotorPower);
+
+    } else if(gamepad1.dpadDownWasReleased()){
+      telemetry.addLine("Down");
+      turretMotorPower = turretMotorPower-0.1;
+      turretmotor.setPower(turretMotorPower);
+    } else{
+      turretmotor.setPower(turretMotorPower);
+    }
+    telemetry.update();
+
+  }
+
+
+
+
+
+  }
