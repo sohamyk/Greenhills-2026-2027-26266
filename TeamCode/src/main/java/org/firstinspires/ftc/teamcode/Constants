@@ -1,0 +1,68 @@
+package org.firstinspires.ftc.teamcode.pedro;
+
+import com.pedropathing.algorithm.Foresight;
+import com.pedropathing.algorithm.ForesightConfig;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.revhub.drivetrains.Mecanum;
+import com.pedropathing.revhub.drivetrains.MecanumConfig;
+import com.pedropathing.revhub.localizers.Encoder;
+import com.pedropathing.revhub.localizers.ThreeWheelConfig;
+import com.pedropathing.revhub.localizers.ThreeWheelLocalizer;
+
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+public class Constants {
+
+    // Uses defaults until you add your Foresight tuner output.
+    public static ForesightConfig foresightConfig =
+            new ForesightConfig(c -> {});
+
+    public static ThreeWheelConfig localizerConfig =
+            new ThreeWheelConfig(c -> {
+                c.leftEncoderName.set("lf");
+                c.rightEncoderName.set("rr");
+                c.strafeEncoderName.set("lr");
+
+                c.leftPodY.set(-164.5124816011393);
+                c.rightPodY.set(158.4544476951256);
+                c.strafePodX.set(-0.008116378400087238);
+
+                c.forwardTicksToInches.set(0.05034887517018621);
+                c.strafeTicksToInches.set(24.0);
+                c.turnTicksToRadians.set(0.0509967095109379);
+
+                c.leftEncoderDirection.set(Encoder.REVERSE);
+                c.rightEncoderDirection.set(Encoder.FORWARD);
+                c.strafeEncoderDirection.set(Encoder.REVERSE);
+            });
+
+    public static MecanumConfig drivetrainConfig =
+            new MecanumConfig(c -> {
+                c.frontLeftName.set("lr");
+                c.frontRightName.set("lf");
+                c.backLeftName.set("rf");
+                c.backRightName.set("rr");
+
+                c.frontLeftDirection.set(
+                        DcMotorSimple.Direction.REVERSE
+                );
+                c.frontRightDirection.set(
+                        DcMotorSimple.Direction.FORWARD
+                );
+                c.backLeftDirection.set(
+                        DcMotorSimple.Direction.REVERSE
+                );
+                c.backRightDirection.set(
+                        DcMotorSimple.Direction.FORWARD
+                );
+            });
+
+    public static Follower create(HardwareMap h) {
+        return new Follower(
+                new ThreeWheelLocalizer(h, localizerConfig),
+                new Mecanum(h, drivetrainConfig),
+                new Foresight(foresightConfig)
+        );
+    }
+}
