@@ -33,7 +33,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
     private static final double DRIVE_POWER = -1.0;
     private static final double INTAKE_POWER = -1.0;
-    private static final double TRANSFER_POWER = -0.7;
+    private static final double TRANSFER_POWER = -0.8;
     private static final double POLLEN_LAUNCH_POWER = -0.85;
     private static final double NECTAR_LAUNCH_POWER = -0.9;
 
@@ -53,11 +53,11 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
         launcher = new NextMotor(RobotController.expansionHub(),0);
         launcher.getVelocityConstants()
-                .withP(0)
+                .withP(0.001)
                 .withI(0)
                 .withD(0)
-                .withV(0.00035)
-                //.withV(0)
+                .withV(0.000425)
+
                 .withS(0.12)
                 .withA(0);
 

@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
@@ -54,16 +55,22 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 
 @Autonomous(name="Robot: Auto Drive By Time", group="Robot")
-@Disabled
+
 public class RobotAutoDriveByTime_Linear extends LinearOpMode {
 
     /* Declare OpMode members. */
-    private DcMotor         leftFront   = null;
-    private DcMotor         rightFront  = null;
+    private DcMotor lf = null;
+    private DcMotor         rf  = null;
 
-    private DcMotor         leftBack = null;
+    private DcMotor lr = null;
 
-    private DcMotor         rightBack = null;
+    private DcMotor rr = null;
+    private DcMotor launcher;
+    private DcMotor intake;
+    private DcMotor transfer;
+
+
+
 
     private ElapsedTime     runtime = new ElapsedTime();
 
@@ -75,18 +82,19 @@ public class RobotAutoDriveByTime_Linear extends LinearOpMode {
     public void runOpMode() {
 
         // Initialize the drive system variables.
-        leftFront  = hardwareMap.get(DcMotor.class, "fl");
-        rightFront = hardwareMap.get(DcMotor.class, "fr");
-        rightBack = hardwareMap.get(DcMotor.class, "br");
-        leftBack = hardwareMap.get(DcMotor.class, "bl");
+        lf = hardwareMap.get(DcMotor.class, "lf");
+        rf = hardwareMap.get(DcMotor.class, "rf");
+        lr = hardwareMap.get(DcMotor.class, "lr");
+        rr = hardwareMap.get(DcMotor.class, "rr");
+        intake = hardwareMap.get(DcMotor.class, "intake");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        lr.setDirection(DcMotorSimple.Direction.REVERSE);
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rr.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Ready to run");    //
@@ -98,24 +106,41 @@ public class RobotAutoDriveByTime_Linear extends LinearOpMode {
         // Step through each leg of the path, ensuring that the OpMode has not been stopped along the way.
 
         // Step 1:  Drive forward for 1 seconds
-        leftFront.setPower(FORWARD_SPEED);
-        rightFront.setPower(FORWARD_SPEED);
-        rightBack.setPower(FORWARD_SPEED);
-        leftBack.setPower(FORWARD_SPEED);
+
+
+       launcher.setPower(0.85);
+       sleep(2000);
+       transfer.setPower(1);
         runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 1.0)) {
+        while (opModeIsActive() && (runtime.seconds() < 6.0)) {
             telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
             telemetry.update();
         }
 
         // Step 2:  Stop
-        leftFront.setPower(STOP);
-        rightFront.setPower(STOP);
-        rightBack.setPower(STOP);
-        leftBack.setPower(STOP);
+        lf.setPower(-0.5);
+        rf.setPower(0.5);
+        rr.setPower(0.5);
+        lr.setPower(-0.5);
 
-        telemetry.addData("Path", "Complete");
+        sleep(1500);
+        lf.setPower(STOP);
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        lr.setPower(STOP);
+        sleep(300);
+        lf.setPower(0.5);
+        rf.setPower(0.5);
+        rr.setPower(0.5);
+        lr.setPower(0.5);
+        intake.setPower(-1);
+        transfer.setPower(-1);
+        sleep(1000);
+
+        telemetry.addData("Path", "Intake");
         telemetry.update();
         sleep(1000);
+
+
     }
 }
