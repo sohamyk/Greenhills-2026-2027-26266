@@ -69,12 +69,11 @@ public class Auton extends LinearOpMode {
     private DcMotor transfer = null;
 
 
+    private ElapsedTime runtime = new ElapsedTime();
 
-    private ElapsedTime     runtime = new ElapsedTime();
 
-
-    static final double     FORWARD_SPEED = 0.5;
-    static final double     STOP    = 0.0;
+    static final double FORWARD_SPEED = 0.5;
+    static final double STOP = 0.0;
 
     @Override
     public void runOpMode() {
@@ -85,8 +84,8 @@ public class Auton extends LinearOpMode {
         rr = hardwareMap.get(DcMotor.class, "br");
         lr = hardwareMap.get(DcMotor.class, "bl");
         intake = hardwareMap.get(DcMotor.class, "intake");
-        launcher = hardwareMap.get(DcMotor.class,"launcher");
-        transfer = hardwareMap.get(DcMotor.class,"transfer");
+        launcher = hardwareMap.get(DcMotor.class, "launcher");
+        transfer = hardwareMap.get(DcMotor.class, "transfer");
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -110,60 +109,60 @@ public class Auton extends LinearOpMode {
         waitForStart();
 
 
-     //Launch + Stop
-      launcher.setPower(0.85);
-      sleep(2000);
-      transfer.setPower(1);
-      intake.setPower(1);
-      sleep(7500);
-      launcher.setPower(STOP);
-      sleep(100);
-      //Turn
-      rf.setPower(0.5);
-      rr.setPower(0.5);
-      sleep(1500);
-      rf.setPower(STOP);
-      rr.setPower(STOP);
-      sleep(100);
-      //Gather pollen
+        //Launch + Stop
+        launcher.setPower(0.85);
+        sleep(2000);
+        transfer.setPower(1);
+        intake.setPower(1);
+        sleep(7500);
+        launcher.setPower(STOP);
+        sleep(100);
+        //Turn
+        rf.setPower(0.5);
+        rr.setPower(0.5);
+        sleep(1500);
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        sleep(100);
+        //Gather pollen
         lf.setPower(0.5);
         rf.setPower(0.5);
         rr.setPower(0.5);
         lr.setPower(0.5);
         transfer.setPower(1);
         intake.setPower(1);
-      sleep(2700);
-      //Reverse to starting point while maintaining pollen in robot
-      transfer.setPower(0.5);
-      intake.setPower(0.3);
+        sleep(2700);
+        //Reverse to starting point while maintaining pollen in robot
+        transfer.setPower(0.5);
+        intake.setPower(0.3);
         lf.setPower(-0.5);
         rf.setPower(-0.5);
         rr.setPower(-0.5);
         lr.setPower(-0.5);
-      sleep(2700);
-      //Rest
+        sleep(2700);
+        //Rest
         lf.setPower(STOP);
         rf.setPower(STOP);
         rr.setPower(STOP);
         lr.setPower(STOP);
-      sleep(1000);
-      //Strafe Right
+        sleep(1000);
+        //Strafe Right
         lf.setPower(0.5);
         rr.setPower(0.5);
         lr.setPower(-0.5);
         rf.setPower(-0.5);
-      sleep(4000);
+        sleep(4000);
         lf.setPower(STOP);
         rf.setPower(STOP);
         rr.setPower(STOP);
         lr.setPower(STOP);
-       sleep(100);
-       //Drive into Park Box
+        sleep(100);
+        //Drive into Park Box
         lf.setPower(0.5);
         rf.setPower(0.5);
         rr.setPower(0.5);
         lr.setPower(0.5);
-       sleep(2500);
+        sleep(2500);
         lf.setPower(STOP);
         rf.setPower(STOP);
         rr.setPower(STOP);
