@@ -37,7 +37,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
     private static final double POLLEN_LAUNCH_POWER = -0.85;
     private static final double NECTAR_LAUNCH_POWER = -0.9;
 
-    private static final AngularVelocity POLLEN_LAUNCH_VELOCITY = new AngularVelocity(2000, Units.RotationsPerMinute);
+    private static final AngularVelocity POLLEN_LAUNCH_VELOCITY = new AngularVelocity(2200, Units.RotationsPerMinute);
     private static final AngularVelocity NECTAR_LAUNCH_VELOCITY = new AngularVelocity(1000, Units.RotationsPerMinute);
 
     private static final double SLOW_MULTIPLIER = 0.5;
@@ -53,7 +53,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
         launcher = new NextMotor(RobotController.expansionHub(),0);
         launcher.getVelocityConstants()
-                .withP(0.001)
+                .withP(0.00001)
                 .withI(0)
                 .withD(0)
                 .withV(0.000425)
