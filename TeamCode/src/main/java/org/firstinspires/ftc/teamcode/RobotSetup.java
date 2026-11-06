@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import java.util.List;
 
 @TeleOp(name = "Robot Setup", group = "Setup")
+@Disabled
 public class RobotSetup extends LinearOpMode {
 
     private static final String WEBCAM_NAME = "Webcam 1";

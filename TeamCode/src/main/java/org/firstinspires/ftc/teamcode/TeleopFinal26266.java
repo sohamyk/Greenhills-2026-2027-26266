@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -53,7 +52,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
         launcher = new NextMotor(RobotController.expansionHub(),0);
         launcher.getVelocityConstants()
-                .withP(0.000001)
+                .withP(0.00001)
                 .withI(0)
                 .withD(0)
                 .withV(0.000425)
@@ -175,6 +174,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
                 if (reverseRequested) {
                     intakePower = -INTAKE_POWER;
                     transferPower = -TRANSFER_POWER;
+
                     //launcherPower = 0;
                 }
 

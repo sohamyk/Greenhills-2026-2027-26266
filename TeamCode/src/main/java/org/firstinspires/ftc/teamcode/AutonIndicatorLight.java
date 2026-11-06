@@ -58,6 +58,7 @@ import dev.nextftc.hardware.actuators.NextMotor;
  */
 
 @Autonomous(name="Launch + Gather + Park (Indicator Light)", group="Robot")
+@Disabled
 public class AutonIndicatorLight extends LinearOpMode {
 
     /* Declare OpMode members. */
