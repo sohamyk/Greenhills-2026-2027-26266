@@ -53,7 +53,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
         launcher = new NextMotor(RobotController.expansionHub(),0);
         launcher.getVelocityConstants()
-                .withP(0.00001)
+                .withP(0.000001)
                 .withI(0)
                 .withD(0)
                 .withV(0.000425)
