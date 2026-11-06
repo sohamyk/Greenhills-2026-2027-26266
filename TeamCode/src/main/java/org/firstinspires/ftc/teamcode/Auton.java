@@ -79,10 +79,10 @@ public class Auton extends LinearOpMode {
     public void runOpMode() {
 
         // Initialize the drive system variables.
-        lf = hardwareMap.get(DcMotor.class, "fl");
-        rf = hardwareMap.get(DcMotor.class, "fr");
-        rr = hardwareMap.get(DcMotor.class, "br");
-        lr = hardwareMap.get(DcMotor.class, "bl");
+        lf = hardwareMap.get(DcMotor.class, "lf");
+        rf = hardwareMap.get(DcMotor.class, "rf");
+        rr = hardwareMap.get(DcMotor.class, "rr");
+        lr = hardwareMap.get(DcMotor.class, "lr");
         intake = hardwareMap.get(DcMotor.class, "intake");
         launcher = hardwareMap.get(DcMotor.class, "launcher");
         transfer = hardwareMap.get(DcMotor.class, "transfer");
@@ -110,17 +110,17 @@ public class Auton extends LinearOpMode {
 
 
         //Launch + Stop
-        launcher.setPower(0.85);
+        launcher.setPower(-0.85);
         sleep(2000);
-        transfer.setPower(1);
-        intake.setPower(1);
+        transfer.setPower(-1);
+        intake.setPower(-1);
         sleep(7500);
         launcher.setPower(STOP);
         sleep(100);
         //Turn
         rf.setPower(0.5);
         rr.setPower(0.5);
-        sleep(1500);
+        sleep(500);
         rf.setPower(STOP);
         rr.setPower(STOP);
         sleep(100);
@@ -129,12 +129,12 @@ public class Auton extends LinearOpMode {
         rf.setPower(0.5);
         rr.setPower(0.5);
         lr.setPower(0.5);
-        transfer.setPower(1);
-        intake.setPower(1);
+        transfer.setPower(-1);
+        intake.setPower(-1);
         sleep(2700);
         //Reverse to starting point while maintaining pollen in robot
-        transfer.setPower(0.5);
-        intake.setPower(0.3);
+        transfer.setPower(-0.5);
+        intake.setPower(-0.3);
         lf.setPower(-0.5);
         rf.setPower(-0.5);
         rr.setPower(-0.5);

@@ -61,6 +61,7 @@ import dev.nextftc.hardware.actuators.NextMotor;
 public class AutonIndicatorLight extends LinearOpMode {
 
     /* Declare OpMode members. */
+    /* Declare Motors. */
     private DcMotor lf = null;
     private DcMotor rf = null;
     private DcMotor lr = null;
@@ -82,7 +83,7 @@ public class AutonIndicatorLight extends LinearOpMode {
     static final RevBlinkinLedDriver.BlinkinPattern AUTO_PATTERN = RevBlinkinLedDriver.BlinkinPattern.BLUE;
     static final RevBlinkinLedDriver.BlinkinPattern DONE_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     static final RevBlinkinLedDriver.BlinkinPattern PAUSE_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
-    static final RevBlinkinLedDriver.BlinkinPattern FLASH_OFF_PATTERN = RevBlinkinLedDriver.BlinkinPattern.BLACK;
+    static final RevBlinkinLedDriver.BlinkinPattern FLASH_OFF_PATTERN = RevBlinkinLedDriver.BlinkinPattern.WHITE;
     static final long DONE_FLASH_MS = 250;
 
     @Override

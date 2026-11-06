@@ -1,17 +1,21 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
+import java.util.Arrays;
 import java.util.List;
 
 import dev.nextftc.hardware.RobotController;
@@ -20,8 +24,7 @@ import dev.nextftc.robot.NextRobot;
 import dev.nextftc.units.Units;
 import dev.nextftc.units.measuretypes.AngularVelocity;
 
-@TeleOp(name = "TeleopFinal26266", group = "Test")
-public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
+public abstract class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
 
     private DcMotor lf, rf, lr, rr;
     private DcMotor intake, transfer;
@@ -32,6 +35,7 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
     private VisionPortal visionPortal;
 
     private RevBlinkinLedDriver blinkin;
+
     private RevBlinkinLedDriver.BlinkinPattern currentPattern = null;
 
     private enum ScoringElement {
@@ -52,12 +56,13 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
     private static final double DEADBAND = 0.05;
 
     private static final String WEBCAM_NAME = "Webcam 1";
-    private static final int[] TARGET_TAG_IDS = {};
+    protected abstract String[] targetClusterName();
+    private static final int MIN_CLUSTER_PERCENT = 25;
     private static final double CAMERA_X_OFFSET_IN = 1.5;
     private static final double CAMERA_YAW_OFFSET_DEG = 0.0;
-    private static final double AIM_BEARING_TOLERANCE_DEG = 3.0;
+    private static final double AIM_BEARING_TOLERANCE_DEG = 15.0;
     private static final double AIM_RANGE_MIN_IN = 0.0;
-    private static final double AIM_RANGE_MAX_IN = 200.0;
+    private static final double AIM_RANGE_MAX_IN = 1000.0;
     private static final int AIM_STABLE_LOOPS = 3;
 
     private static final RevBlinkinLedDriver.BlinkinPattern AIMED_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
@@ -84,7 +89,11 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
 
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, WEBCAM_NAME))
+                .setCameraResolution(new Size(1280,720))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .addProcessor(aprilTag)
+                .enableLiveView(true)
+                .setAutoStopLiveView(false)
                 .build();
 
         launcher = new NextMotor(RobotController.expansionHub(), 0);
@@ -119,19 +128,25 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
 
         setLedPattern(NO_TARGET_PATTERN);
 
-        telemetry.addLine("Ready");
-        telemetry.addLine("G1 left stick: drive and strafe");
-        telemetry.addLine("G1 right stick X: turn");
-        telemetry.addLine("G1 B: hold to stop all motors");
-        telemetry.addLine("G2 left trigger: intake + transfer");
-        telemetry.addLine("G2 right trigger: launch");
-        telemetry.addLine("G2 Y: pollen | X: nectar");
-        telemetry.addLine("G2 A: hold for half-speed intake + transfer");
-        telemetry.addLine("G2 B: hold to reverse intake + transfer");
-        telemetry.addLine("LEDs: green = aimed, gold = tag seen, red = no tag");
-        telemetry.update();
-
-        waitForStart();
+        while (opModeInInit()) {
+            telemetry.addLine("Ready");
+            telemetry.addData("Aiming at", targetClusterName());
+            telemetry.addLine("G1 left stick: drive and strafe");
+            telemetry.addLine("G1 right stick X: turn");
+            telemetry.addLine("G1 B: hold to stop all motors");
+            telemetry.addLine("G2 left trigger: intake + transfer");
+            telemetry.addLine("G2 right trigger: launch");
+            telemetry.addLine("G2 Y: pollen | X: nectar");
+            telemetry.addLine("G2 A: hold for half-speed intake + transfer");
+            telemetry.addLine("G2 B: hold to reverse intake + transfer");
+            telemetry.addLine("LEDs: green = aimed, gold = tag seen, red = no tag");
+            telemetry.update();
+            if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+                ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
+                exposureControl.setMode(ExposureControl.Mode.Auto);
+            }
+            idle();
+        }
 
         try {
             while (opModeIsActive()) {
@@ -144,6 +159,7 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
                 double forward = applyDeadband(gamepad1.left_stick_x);
                 double strafe = applyDeadband(gamepad1.left_stick_y);
                 double turn = applyDeadband(gamepad1.right_stick_x);
+
 
                 double denominator = Math.max(
                         Math.abs(forward) + Math.abs(strafe) + Math.abs(turn),
@@ -182,6 +198,8 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
                     transferPower = -TRANSFER_POWER;
                 }
 
+
+
                 if (stopped) {
                     stopAll();
                 } else {
@@ -195,7 +213,7 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
                     launcher.update();
                 }
 
-                AprilTagSingleDetection target = findTarget();
+                AprilTagClusterDetection target = findTarget();
                 boolean targetSeen = target != null;
                 double bearing = targetSeen ? robotBearing(target) : 0.0;
                 double range = targetSeen ? target.ftcPose.range : 0.0;
@@ -267,7 +285,7 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
         } finally {
             stopAll();
             visionPortal.close();
-            setLedPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
+            setLedPattern(RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE);
         }
     }
 
@@ -276,6 +294,18 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
         telemetry.addData("# AprilTags detected", detections.size());
 
         for (AprilTagDetection raw : detections) {
+            if (raw instanceof AprilTagClusterDetection) {
+                AprilTagClusterDetection cluster = (AprilTagClusterDetection) raw;
+                telemetry.addLine(String.format("Cluster %s (%d%% of tags seen)",
+                        cluster.metadata.name, cluster.percentClusterFound));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                        cluster.ftcPose.x, cluster.ftcPose.y, cluster.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+                        cluster.ftcPose.pitch, cluster.ftcPose.roll, cluster.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)",
+                        cluster.ftcPose.range, cluster.ftcPose.bearing, cluster.ftcPose.elevation));
+                continue;
+            }
             if (!(raw instanceof AprilTagSingleDetection)) {
                 continue;
             }
@@ -302,39 +332,34 @@ public class TeleopIndicatorLight extends LinearOpMode implements NextRobot {
         return Math.toDegrees(-Math.atan2(x, y)) - CAMERA_YAW_OFFSET_DEG;
     }
 
-    private AprilTagSingleDetection findTarget() {
+    private AprilTagClusterDetection findTarget() {
         List<AprilTagDetection> detections = aprilTag.getDetections();
-        AprilTagSingleDetection best = null;
+        AprilTagClusterDetection best = null;
 
         for (AprilTagDetection raw : detections) {
-            if (!(raw instanceof AprilTagSingleDetection)) {
+            if (!(raw instanceof AprilTagClusterDetection)) {
                 continue;
             }
-            AprilTagSingleDetection detection = (AprilTagSingleDetection) raw;
-            if (detection.metadata == null || detection.ftcPose == null) {
+            AprilTagClusterDetection cluster = (AprilTagClusterDetection) raw;
+            if (cluster.metadata == null || cluster.ftcPose == null) {
                 continue;
             }
-            if (!isTargetId(detection.id)) {
+            if (cluster.percentClusterFound < MIN_CLUSTER_PERCENT) {
                 continue;
             }
-            if (best == null || Math.abs(robotBearing(detection)) < Math.abs(robotBearing(best))) {
-                best = detection;
+            if (!isTargetCluster(cluster.metadata.name)) {
+                continue;
+            }
+            if (best == null || Math.abs(robotBearing(cluster)) < Math.abs(robotBearing(best))) {
+                best = cluster;
             }
         }
 
         return best;
     }
 
-    private boolean isTargetId(int id) {
-        if (TARGET_TAG_IDS.length == 0) {
-            return true;
-        }
-        for (int targetId : TARGET_TAG_IDS) {
-            if (targetId == id) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isTargetCluster(String name) {
+        return Arrays.asList(targetClusterName()).contains(name);
     }
 
     private void setLedPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {
