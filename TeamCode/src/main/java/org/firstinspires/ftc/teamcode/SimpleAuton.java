@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.hardware.actuators.NextMotor;
@@ -69,6 +70,8 @@ public class SimpleAuton extends LinearOpMode {
     private DcMotor transfer = null;
 
 
+
+
     private ElapsedTime runtime = new ElapsedTime();
 
 
@@ -86,6 +89,7 @@ public class SimpleAuton extends LinearOpMode {
         intake = hardwareMap.get(DcMotor.class, "intake");
         launcher = hardwareMap.get(DcMotor.class, "launcher");
         transfer = hardwareMap.get(DcMotor.class, "transfer");
+
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import dev.nextftc.hardware.RobotController;
 import dev.nextftc.hardware.actuators.NextMotor;
@@ -56,20 +58,27 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
     private static final double DEADBAND = 0.05;
 
     private static final String WEBCAM_NAME = "Webcam 1";
+    private static final boolean USE_AUTO_EXPOSURE = true;
+    private static final long EXPOSURE_MS = 6;
+    private static final int GAIN = 250;
+    private boolean exposureSet = false;
     protected abstract String[] targetClusterName();
     private static final int MIN_CLUSTER_PERCENT = 25;
+    private static final double MAX_SCORABLE_ROLL_DEG = 90.0;
     private static final double CAMERA_X_OFFSET_IN = 1.5;
     private static final double CAMERA_YAW_OFFSET_DEG = 0.0;
-    private static final double AIM_BEARING_TOLERANCE_DEG = 15.0;
+    private static final double AIM_BEARING_TOLERANCE_DEG = 20.0;
     private static final double AIM_RANGE_MIN_IN = 0.0;
     private static final double AIM_RANGE_MAX_IN = 1000.0;
-    private static final int AIM_STABLE_LOOPS = 3;
+    private static final long AIMED_HOLD_MS = 400;
+    private static final long TARGET_HOLD_MS = 400;
 
     private static final RevBlinkinLedDriver.BlinkinPattern AIMED_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     private static final RevBlinkinLedDriver.BlinkinPattern TARGET_SEEN_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GOLD;
     private static final RevBlinkinLedDriver.BlinkinPattern NO_TARGET_PATTERN = RevBlinkinLedDriver.BlinkinPattern.RED;
 
-    private int aimedLoopCount = 0;
+    private long lastAimedMs = -100000;
+    private long lastSeenMs = -100000;
 
     @Override
     public void runOpMode() {
@@ -141,9 +150,8 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
             telemetry.addLine("G2 B: hold to reverse intake + transfer");
             telemetry.addLine("LEDs: green = aimed, gold = tag seen, red = no tag");
             telemetry.update();
-            if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-                ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
-                exposureControl.setMode(ExposureControl.Mode.Auto);
+            if (!exposureSet && visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+                applyExposure();
             }
             idle();
         }
@@ -223,17 +231,20 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
                         && range >= AIM_RANGE_MIN_IN
                         && range <= AIM_RANGE_MAX_IN;
 
+                long nowMs = System.currentTimeMillis();
                 if (inAimWindow) {
-                    aimedLoopCount++;
-                } else {
-                    aimedLoopCount = 0;
+                    lastAimedMs = nowMs;
+                }
+                if (targetSeen) {
+                    lastSeenMs = nowMs;
                 }
 
-                boolean aimed = aimedLoopCount >= AIM_STABLE_LOOPS;
+                boolean aimed = nowMs - lastAimedMs <= AIMED_HOLD_MS;
+                boolean recentlySeen = nowMs - lastSeenMs <= TARGET_HOLD_MS;
 
                 if (aimed) {
                     setLedPattern(AIMED_PATTERN);
-                } else if (targetSeen) {
+                } else if (recentlySeen) {
                     setLedPattern(TARGET_SEEN_PATTERN);
                 } else {
                     setLedPattern(NO_TARGET_PATTERN);
@@ -350,7 +361,13 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
             if (!isTargetCluster(cluster.metadata.name)) {
                 continue;
             }
-            if (best == null || Math.abs(robotBearing(cluster)) < Math.abs(robotBearing(best))) {
+            if (Math.abs(cluster.ftcPose.roll) >= MAX_SCORABLE_ROLL_DEG) {
+                continue;
+            }
+            if (best == null
+                    || cluster.percentClusterFound > best.percentClusterFound
+                    || (cluster.percentClusterFound == best.percentClusterFound
+                        && Math.abs(robotBearing(cluster)) < Math.abs(robotBearing(best)))) {
                 best = cluster;
             }
         }
@@ -360,6 +377,23 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
 
     private boolean isTargetCluster(String name) {
         return Arrays.asList(targetClusterName()).contains(name);
+    }
+
+    private void applyExposure() {
+        ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
+        if (USE_AUTO_EXPOSURE) {
+            exposureControl.setMode(ExposureControl.Mode.Auto);
+        } else {
+            if (exposureControl.getMode() != ExposureControl.Mode.Manual) {
+                exposureControl.setMode(ExposureControl.Mode.Manual);
+                sleep(50);
+            }
+            exposureControl.setExposure(EXPOSURE_MS, TimeUnit.MILLISECONDS);
+            sleep(20);
+            GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
+            gainControl.setGain(GAIN);
+        }
+        exposureSet = true;
     }
 
     private void setLedPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {

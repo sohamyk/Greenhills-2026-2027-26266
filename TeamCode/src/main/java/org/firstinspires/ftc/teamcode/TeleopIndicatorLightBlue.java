@@ -12,4 +12,5 @@ public class TeleopIndicatorLightBlue extends TeleopIndicatorLight {
         return new String[]{"BLUE AUDIENCE", "BLUE SCORING"};
     }
 
+
 }
