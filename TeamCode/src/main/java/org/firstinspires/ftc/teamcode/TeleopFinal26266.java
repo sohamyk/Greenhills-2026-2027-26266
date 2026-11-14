@@ -4,14 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
-
-import dev.nextftc.control.feedback.PIDCoefficients;
-import dev.nextftc.control.feedback.PIDController;
 import dev.nextftc.hardware.RobotController;
 import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.NextRobot;
-import dev.nextftc.units.Unit;
 import dev.nextftc.units.Units;
 import dev.nextftc.units.measuretypes.AngularVelocity;
 
@@ -21,26 +16,27 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
     private DcMotor lf, rf, lr, rr;
     private DcMotor intake, transfer;
 
+
     private NextMotor launcher;
 
     private enum ScoringElement {
-        POLLEN,
-        NECTAR
+        pollenballs,
+        nectarballs
     }
 
-    private ScoringElement selectedElement = ScoringElement.POLLEN;
+    private ScoringElement selectedElement = ScoringElement.pollenballs;
 
-    private static final double DRIVE_POWER = -1.0;
-    private static final double INTAKE_POWER = -1.0;
-    private static final double TRANSFER_POWER = -0.8;
-    private static final double POLLEN_LAUNCH_POWER = -0.85;
-    private static final double NECTAR_LAUNCH_POWER = -0.9;
+    private static final double drivemotorpower = -1.0;
+    private static final double intakemotorpower = -1.0;
+    private static final double transfermotorpower = -0.8;
+    private static final double pollenlaunch = -0.85;
+    private static final double nectarlaunch = -0.9;
 
-    private static final AngularVelocity POLLEN_LAUNCH_VELOCITY = new AngularVelocity(2200, Units.RotationsPerMinute);
-    private static final AngularVelocity NECTAR_LAUNCH_VELOCITY = new AngularVelocity(1000, Units.RotationsPerMinute);
+    private static final AngularVelocity pollenvelocity = new AngularVelocity(2200, Units.RotationsPerMinute);
+    private static final AngularVelocity nectarvelocity = new AngularVelocity(1000, Units.RotationsPerMinute);
 
-    private static final double SLOW_MULTIPLIER = 0.5;
-    private static final double DEADBAND = 0.05;
+    private static final double slowspeed = 0.5;
+    private static final double deadband = 0.05;
 
     @Override
     public void runOpMode() {
@@ -49,6 +45,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
         lr = hardwareMap.get(DcMotor.class, "lr");
         rr = hardwareMap.get(DcMotor.class, "rr");
         intake = hardwareMap.get(DcMotor.class, "intake");
+
 
         launcher = new NextMotor(RobotController.expansionHub(),0);
         launcher.getVelocityConstants()
@@ -100,9 +97,9 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
         try {
             while (opModeIsActive()) {
                 if (gamepad2.y) {
-                    selectedElement = ScoringElement.POLLEN;
+                    selectedElement = ScoringElement.pollenballs;
                 } else if (gamepad2.x) {
-                    selectedElement = ScoringElement.NECTAR;
+                    selectedElement = ScoringElement.nectarballs;
                 }
 
                 // Original drive mapping.
@@ -119,26 +116,26 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
                 double lfPower =
                         (forward + strafe + turn)
-                                / denominator * DRIVE_POWER;
+                                / denominator * drivemotorpower;
 
                 double lrPower =
                         (forward - strafe + turn)
-                                / denominator * DRIVE_POWER;
+                                / denominator * drivemotorpower;
 
                 double rfPower =
                         (forward - strafe - turn)
-                                / denominator * DRIVE_POWER;
+                                / denominator * drivemotorpower;
 
                 double rrPower =
                         (forward + strafe - turn)
-                                / denominator * DRIVE_POWER;
+                                / denominator * drivemotorpower;
 
                 boolean slowMode = gamepad2.a;
                 boolean reverseRequested = gamepad2.b;
                 boolean stopped = gamepad1.b;
 
                 double speedMultiplier =
-                        slowMode ? SLOW_MULTIPLIER : 1.0;
+                        slowMode ? slowspeed : 1.0;
 
                 double intakeTrigger =
                         applyDeadband(gamepad2.left_trigger);
@@ -147,20 +144,20 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
                         applyDeadband(gamepad2.right_trigger);
 
                 double intakePower =
-                        intakeTrigger * INTAKE_POWER * speedMultiplier;
+                        intakeTrigger * intakemotorpower * speedMultiplier;
 
                 double transferPower =
-                        intakeTrigger * TRANSFER_POWER * speedMultiplier;
+                        intakeTrigger * transfermotorpower * speedMultiplier;
 
               /*  double launchPreset =
                         selectedElement == ScoringElement.POLLEN
                                 ? POLLEN_LAUNCH_POWER
                                 : NECTAR_LAUNCH_POWER; */
                 if (launchTrigger > 0.5) {
-                    if (selectedElement == ScoringElement.POLLEN) {
-                        launcher.setVelocitySetpoint(POLLEN_LAUNCH_VELOCITY);
+                    if (selectedElement == ScoringElement.pollenballs) {
+                        launcher.setVelocitySetpoint(pollenvelocity);
                     } else {
-                        launcher.setVelocitySetpoint(NECTAR_LAUNCH_VELOCITY);
+                        launcher.setVelocitySetpoint(nectarvelocity);
                     }
                 } else {
                     launcher.setVelocitySetpoint(new AngularVelocity(0, Units.RotationsPerMinute));
@@ -172,8 +169,8 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
 
                 // Reverse overrides slow mode and both triggers.
                 if (reverseRequested) {
-                    intakePower = -INTAKE_POWER;
-                    transferPower = -TRANSFER_POWER;
+                    intakePower = -intakemotorpower;
+                    transferPower = -transfermotorpower;
 
                     //launcherPower = 0;
                 }
@@ -240,7 +237,7 @@ public class TeleopFinal26266 extends LinearOpMode implements NextRobot {
     }
 
     private double applyDeadband(double input) {
-        return Math.abs(input) > DEADBAND ? input : 0.0;
+        return Math.abs(input) > deadband ? input : 0.0;
     }
 
     private void stopAll() {

@@ -41,44 +41,44 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
     private RevBlinkinLedDriver.BlinkinPattern currentPattern = null;
 
     private enum ScoringElement {
-        POLLEN,
-        NECTAR
+        pollen,
+        nectar
     }
 
-    private ScoringElement selectedElement = ScoringElement.POLLEN;
+    private ScoringElement currentballtoscore = ScoringElement.pollen;
 
-    private static final double DRIVE_POWER = -1.0;
-    private static final double INTAKE_POWER = -1.0;
-    private static final double TRANSFER_POWER = -0.8;
+    private static final double drivemotorpower = -1.0;
+    private static final double intakemotorpower = -1.0;
+    private static final double transfermotorpower = -0.8;
 
-    private static final AngularVelocity POLLEN_LAUNCH_VELOCITY = new AngularVelocity(2200, Units.RotationsPerMinute);
-    private static final AngularVelocity NECTAR_LAUNCH_VELOCITY = new AngularVelocity(1000, Units.RotationsPerMinute);
+    private static final AngularVelocity pollenvelocity = new AngularVelocity(2200, Units.RotationsPerMinute);
+    private static final AngularVelocity nectarvelocity = new AngularVelocity(1000, Units.RotationsPerMinute);
 
-    private static final double SLOW_MULTIPLIER = 0.5;
-    private static final double DEADBAND = 0.05;
+    private static final double slowspeed = 0.5;
+    private static final double deadband = 0.05;
 
-    private static final String WEBCAM_NAME = "Webcam 1";
-    private static final boolean USE_AUTO_EXPOSURE = true;
-    private static final long EXPOSURE_MS = 6;
-    private static final int GAIN = 250;
+    private static final String webcamonhub = "Webcam 1";
+    private static final boolean automaticexposure = true;
+    private static final long exposurelevel = 6;
+    private static final int gain = 250;
     private boolean exposureSet = false;
     protected abstract String[] targetClusterName();
-    private static final int MIN_CLUSTER_PERCENT = 25;
-    private static final double MAX_SCORABLE_ROLL_DEG = 90.0;
-    private static final double CAMERA_X_OFFSET_IN = 1.5;
-    private static final double CAMERA_YAW_OFFSET_DEG = 0.0;
-    private static final double AIM_BEARING_TOLERANCE_DEG = 20.0;
-    private static final double AIM_RANGE_MIN_IN = 0.0;
-    private static final double AIM_RANGE_MAX_IN = 1000.0;
-    private static final long AIMED_HOLD_MS = 400;
-    private static final long TARGET_HOLD_MS = 400;
+    private static final int minimumcluster = 25;
+    private static final double maximumscoringangle = 90.0;
+    private static final double cameraoffset = 1.5;
+    private static final double camerayawoffset = 0.0;
+    private static final double aimtolerance = 20.0;
+    private static final double aimrange = 0.0;
+    private static final double maximumaimingrange = 1000.0;
+    private static final long heldaim = 400;
+    private static final long targetholding = 400;
 
-    private static final RevBlinkinLedDriver.BlinkinPattern AIMED_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
-    private static final RevBlinkinLedDriver.BlinkinPattern TARGET_SEEN_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GOLD;
-    private static final RevBlinkinLedDriver.BlinkinPattern NO_TARGET_PATTERN = RevBlinkinLedDriver.BlinkinPattern.RED;
+    private static final RevBlinkinLedDriver.BlinkinPattern aimedcolor = RevBlinkinLedDriver.BlinkinPattern.GREEN;
+    private static final RevBlinkinLedDriver.BlinkinPattern hiveseencolor = RevBlinkinLedDriver.BlinkinPattern.GOLD;
+    private static final RevBlinkinLedDriver.BlinkinPattern nohivecolor = RevBlinkinLedDriver.BlinkinPattern.RED;
 
-    private long lastAimedMs = -100000;
-    private long lastSeenMs = -100000;
+    private long lastaimedms = -100000;
+    private long lastseenms = -100000;
 
     @Override
     public void runOpMode() {
@@ -97,7 +97,7 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
                 .build();
 
         visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, WEBCAM_NAME))
+                .setCamera(hardwareMap.get(WebcamName.class, webcamonhub))
                 .setCameraResolution(new Size(1280,720))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .addProcessor(aprilTag)
@@ -135,7 +135,7 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
 
         transfer.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        setLedPattern(NO_TARGET_PATTERN);
+        setLedPattern(nohivecolor);
 
         while (opModeInInit()) {
             telemetry.addLine("Ready");
@@ -159,9 +159,9 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
         try {
             while (opModeIsActive()) {
                 if (gamepad2.y) {
-                    selectedElement = ScoringElement.POLLEN;
+                    currentballtoscore = ScoringElement.pollen;
                 } else if (gamepad2.x) {
-                    selectedElement = ScoringElement.NECTAR;
+                    currentballtoscore = ScoringElement.nectar;
                 }
 
                 double forward = applyDeadband(gamepad1.left_stick_x);
@@ -174,36 +174,36 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
                         1.0
                 );
 
-                double lfPower = (forward + strafe + turn) / denominator * DRIVE_POWER;
-                double lrPower = (forward - strafe + turn) / denominator * DRIVE_POWER;
-                double rfPower = (forward - strafe - turn) / denominator * DRIVE_POWER;
-                double rrPower = (forward + strafe - turn) / denominator * DRIVE_POWER;
+                double lfPower = (forward + strafe + turn) / denominator * drivemotorpower;
+                double lrPower = (forward - strafe + turn) / denominator * drivemotorpower;
+                double rfPower = (forward - strafe - turn) / denominator * drivemotorpower;
+                double rrPower = (forward + strafe - turn) / denominator * drivemotorpower;
 
                 boolean slowMode = gamepad2.a;
                 boolean reverseRequested = gamepad2.b;
                 boolean stopped = gamepad1.b;
 
-                double speedMultiplier = slowMode ? SLOW_MULTIPLIER : 1.0;
+                double speedMultiplier = slowMode ? slowspeed : 1.0;
 
                 double intakeTrigger = applyDeadband(gamepad2.left_trigger);
                 double launchTrigger = applyDeadband(gamepad2.right_trigger);
 
-                double intakePower = intakeTrigger * INTAKE_POWER * speedMultiplier;
-                double transferPower = intakeTrigger * TRANSFER_POWER * speedMultiplier;
+                double intakePower = intakeTrigger * intakemotorpower * speedMultiplier;
+                double transferPower = intakeTrigger * transfermotorpower * speedMultiplier;
 
                 if (launchTrigger > 0.5) {
-                    if (selectedElement == ScoringElement.POLLEN) {
-                        launcher.setVelocitySetpoint(POLLEN_LAUNCH_VELOCITY);
+                    if (currentballtoscore == ScoringElement.pollen) {
+                        launcher.setVelocitySetpoint(pollenvelocity);
                     } else {
-                        launcher.setVelocitySetpoint(NECTAR_LAUNCH_VELOCITY);
+                        launcher.setVelocitySetpoint(nectarvelocity);
                     }
                 } else {
                     launcher.setVelocitySetpoint(new AngularVelocity(0, Units.RotationsPerMinute));
                 }
 
                 if (reverseRequested) {
-                    intakePower = -INTAKE_POWER;
-                    transferPower = -TRANSFER_POWER;
+                    intakePower = -intakemotorpower;
+                    transferPower = -transfermotorpower;
                 }
 
 
@@ -227,27 +227,27 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
                 double range = targetSeen ? target.ftcPose.range : 0.0;
 
                 boolean inAimWindow = targetSeen
-                        && Math.abs(bearing) <= AIM_BEARING_TOLERANCE_DEG
-                        && range >= AIM_RANGE_MIN_IN
-                        && range <= AIM_RANGE_MAX_IN;
+                        && Math.abs(bearing) <= aimtolerance
+                        && range >= aimrange
+                        && range <= maximumaimingrange;
 
                 long nowMs = System.currentTimeMillis();
                 if (inAimWindow) {
-                    lastAimedMs = nowMs;
+                    lastaimedms = nowMs;
                 }
                 if (targetSeen) {
-                    lastSeenMs = nowMs;
+                    lastseenms = nowMs;
                 }
 
-                boolean aimed = nowMs - lastAimedMs <= AIMED_HOLD_MS;
-                boolean recentlySeen = nowMs - lastSeenMs <= TARGET_HOLD_MS;
+                boolean aimed = nowMs - lastaimedms <= heldaim;
+                boolean recentlySeen = nowMs - lastseenms <= targetholding;
 
                 if (aimed) {
-                    setLedPattern(AIMED_PATTERN);
+                    setLedPattern(aimedcolor);
                 } else if (recentlySeen) {
-                    setLedPattern(TARGET_SEEN_PATTERN);
+                    setLedPattern(hiveseencolor);
                 } else {
-                    setLedPattern(NO_TARGET_PATTERN);
+                    setLedPattern(nohivecolor);
                 }
 
                 String intakeMode;
@@ -276,7 +276,7 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
                 telemetry.addData("G2 X / nectar", gamepad2.x);
 
                 telemetry.addData("Intake / transfer mode", intakeMode);
-                telemetry.addData("Selected element", selectedElement);
+                telemetry.addData("Selected element", currentballtoscore);
 
                 telemetry.addLine("=== MECHANISM POWER ===");
                 telemetry.addData("Intake", "%.2f", intake.getPower());
@@ -338,9 +338,9 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
     }
 
     private double robotBearing(AprilTagDetection detection) {
-        double x = detection.ftcPose.x + CAMERA_X_OFFSET_IN;
+        double x = detection.ftcPose.x + cameraoffset;
         double y = detection.ftcPose.y;
-        return Math.toDegrees(-Math.atan2(x, y)) - CAMERA_YAW_OFFSET_DEG;
+        return Math.toDegrees(-Math.atan2(x, y)) - camerayawoffset;
     }
 
     private AprilTagClusterDetection findTarget() {
@@ -355,13 +355,13 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
             if (cluster.metadata == null || cluster.ftcPose == null) {
                 continue;
             }
-            if (cluster.percentClusterFound < MIN_CLUSTER_PERCENT) {
+            if (cluster.percentClusterFound < minimumcluster) {
                 continue;
             }
             if (!isTargetCluster(cluster.metadata.name)) {
                 continue;
             }
-            if (Math.abs(cluster.ftcPose.roll) >= MAX_SCORABLE_ROLL_DEG) {
+            if (Math.abs(cluster.ftcPose.roll) >= maximumscoringangle) {
                 continue;
             }
             if (best == null
@@ -381,17 +381,17 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
 
     private void applyExposure() {
         ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
-        if (USE_AUTO_EXPOSURE) {
+        if (automaticexposure) {
             exposureControl.setMode(ExposureControl.Mode.Auto);
         } else {
             if (exposureControl.getMode() != ExposureControl.Mode.Manual) {
                 exposureControl.setMode(ExposureControl.Mode.Manual);
                 sleep(50);
             }
-            exposureControl.setExposure(EXPOSURE_MS, TimeUnit.MILLISECONDS);
+            exposureControl.setExposure(exposurelevel, TimeUnit.MILLISECONDS);
             sleep(20);
             GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
-            gainControl.setGain(GAIN);
+            gainControl.setGain(gain);
         }
         exposureSet = true;
     }
@@ -404,7 +404,7 @@ public abstract class TeleopIndicatorLight extends LinearOpMode implements NextR
     }
 
     private double applyDeadband(double input) {
-        return Math.abs(input) > DEADBAND ? input : 0.0;
+        return Math.abs(input) > deadband ? input : 0.0;
     }
 
     private void stopAll() {

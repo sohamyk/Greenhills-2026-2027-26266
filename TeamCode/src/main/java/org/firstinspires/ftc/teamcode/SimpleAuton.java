@@ -30,14 +30,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import dev.nextftc.hardware.actuators.NextMotor;
 
 /*
  * This OpMode illustrates the concept of driving a path based on time.
@@ -75,7 +71,7 @@ public class SimpleAuton extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
 
 
-    static final double FORWARD_SPEED = 0.5;
+    static final double forwardmotorspeed = 0.5;
     static final double STOP = 0.0;
 
     @Override
