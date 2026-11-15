@@ -161,8 +161,31 @@ public class SimpleAuton extends LinearOpMode {
         lf.setPower(0.5);
         lr.setPower(-0.5);
         sleep(1750);
-
-
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        lf.setPower(STOP);
+        lr.setPower(STOP);
+        sleep(200);
+        rf.setPower(0.5);
+        rr.setPower(0.5);
+        lf.setPower(0.5);
+        lr.setPower(0.5);
+        sleep(1000);
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        lf.setPower(STOP);
+        lr.setPower(STOP);
+        sleep(200);
+        rf.setPower(-0.5);
+        rr.setPower(0.5);
+        lf.setPower(0.5);
+        lr.setPower(-0.5);
+        sleep(300);
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        lf.setPower(STOP);
+        lr.setPower(STOP);
+        sleep(200);
         transfer.setPower(STOP);
         intake.setPower(STOP);
         sleep(1);
