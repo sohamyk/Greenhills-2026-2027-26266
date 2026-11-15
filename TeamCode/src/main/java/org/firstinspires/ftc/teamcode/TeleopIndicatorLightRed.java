@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Teleop Red", group = "Test")
-@Disabled
+
 public class TeleopIndicatorLightRed extends TeleopIndicatorLight {
 
     @Override

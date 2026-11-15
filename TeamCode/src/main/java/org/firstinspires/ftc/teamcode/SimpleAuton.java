@@ -110,29 +110,64 @@ public class SimpleAuton extends LinearOpMode {
 
 
         //Launch + Stop
-        launcher.setPower(-0.95);
+       launcher.setPower(-0.95);
         sleep(3000);
         transfer.setPower(-1);
         intake.setPower(-1);
         sleep(6500);
         launcher.setPower(STOP);
         sleep(100);
-        //Turn
+        rf.setPower(-0.5);
+        rr.setPower(0.5);
+        lf.setPower(0.5);
+        lr.setPower(-0.5);
+        sleep(100);
         rf.setPower(0.5);
         rr.setPower(0.5);
         lf.setPower(0.5);
         lr.setPower(0.5);
-        sleep(850);
+        sleep(750);
+       //transfer.setPower(-1);
+        intake.setPower(-1);
         rf.setPower(STOP);
         rr.setPower(STOP);
         lf.setPower(STOP);
         lr.setPower(STOP);
         sleep(100);
+
+        rf.setPower(-0.5);
+        rr.setPower(0.5);
+        lf.setPower(0.5);
+        lr.setPower(-0.5);
+        sleep(2000);
+        rf.setPower(STOP);
+        rr.setPower(STOP);
+        lf.setPower(STOP);
+        lr.setPower(STOP);
+        sleep(100);
+        rf.setPower(0.5);
+        rr.setPower(-0.5);
+        lf.setPower(-0.5);
+        lr.setPower(0.5);
+        sleep(200);
+        rf.setPower(-0.5);
+        rr.setPower(-0.5);
+        lf.setPower(-0.5);
+        lr.setPower(-0.5);
+        sleep(1000);
+
+        rf.setPower(-0.5);
+        rr.setPower(0.5);
+        lf.setPower(0.5);
+        lr.setPower(-0.5);
+        sleep(1750);
+
+
         transfer.setPower(STOP);
         intake.setPower(STOP);
         sleep(1);
 
-        telemetry.addData("Path", "Complete");
+        telemetry.addData("Autonomous","Path", "Complete");
         telemetry.update();
         sleep(1000);
     }

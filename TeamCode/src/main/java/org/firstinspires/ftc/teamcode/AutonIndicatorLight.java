@@ -80,11 +80,11 @@ public class AutonIndicatorLight extends LinearOpMode {
     static final double FORWARD_SPEED = 0.5;
     static final double STOP = 0.0;
 
-    static final RevBlinkinLedDriver.BlinkinPattern INIT_PATTERN = RevBlinkinLedDriver.BlinkinPattern.BLUE;
-    static final RevBlinkinLedDriver.BlinkinPattern AUTO_PATTERN = RevBlinkinLedDriver.BlinkinPattern.BLUE;
+    static final RevBlinkinLedDriver.BlinkinPattern INIT_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
+    static final RevBlinkinLedDriver.BlinkinPattern AUTO_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     static final RevBlinkinLedDriver.BlinkinPattern DONE_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     static final RevBlinkinLedDriver.BlinkinPattern PAUSE_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
-    static final RevBlinkinLedDriver.BlinkinPattern FLASH_OFF_PATTERN = RevBlinkinLedDriver.BlinkinPattern.WHITE;
+    static final RevBlinkinLedDriver.BlinkinPattern FLASH_OFF_PATTERN = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     static final long DONE_FLASH_MS = 250;
 
     @Override
@@ -127,66 +127,7 @@ public class AutonIndicatorLight extends LinearOpMode {
 
 
         //Launch + Stop
-        launcher.setPower(0.85);
-        sleep(2000);
-        transfer.setPower(1);
-        intake.setPower(1);
-        sleep(7500);
-        launcher.setPower(STOP);
-        pause(100);
-        //Turn
-        rf.setPower(0.5);
-        rr.setPower(0.5);
-        sleep(1500);
-        rf.setPower(STOP);
-        rr.setPower(STOP);
-        pause(100);
-        //Gather pollen
-        lf.setPower(0.5);
-        rf.setPower(0.5);
-        rr.setPower(0.5);
-        lr.setPower(0.5);
-        transfer.setPower(1);
-        intake.setPower(1);
-        sleep(2700);
-        //Reverse to starting point while maintaining pollen in robot
-        transfer.setPower(0.5);
-        intake.setPower(0.3);
-        lf.setPower(-0.5);
-        rf.setPower(-0.5);
-        rr.setPower(-0.5);
-        lr.setPower(-0.5);
-        sleep(2700);
-        //Rest
-        lf.setPower(STOP);
-        rf.setPower(STOP);
-        rr.setPower(STOP);
-        lr.setPower(STOP);
-        pause(1000);
-        //Strafe Right
-        lf.setPower(0.5);
-        rr.setPower(0.5);
-        lr.setPower(-0.5);
-        rf.setPower(-0.5);
-        sleep(4000);
-        lf.setPower(STOP);
-        rf.setPower(STOP);
-        rr.setPower(STOP);
-        lr.setPower(STOP);
-        pause(100);
-        //Drive into Park Box
-        lf.setPower(0.5);
-        rf.setPower(0.5);
-        rr.setPower(0.5);
-        lr.setPower(0.5);
-        sleep(2500);
-        lf.setPower(STOP);
-        rf.setPower(STOP);
-        rr.setPower(STOP);
-        lr.setPower(STOP);
-        transfer.setPower(STOP);
-        intake.setPower(STOP);
-        sleep(1);
+
 
         telemetry.addData("Path", "Complete");
         telemetry.update();

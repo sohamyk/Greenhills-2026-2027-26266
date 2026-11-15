@@ -15,6 +15,7 @@ import java.util.List;
 
 @TeleOp(name = "Robot Setup", group = "Setup")
 @Disabled
+
 public class RobotSetup extends LinearOpMode {
 
     private static final String WEBCAM_NAME = "Webcam 1";
